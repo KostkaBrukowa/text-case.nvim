@@ -1,9 +1,13 @@
 local plugin = require("textcase.plugin.plugin")
 local presets = require("textcase.plugin.presets")
 local constants = require("textcase.shared.constants")
+local utils = require("textcase.shared.utils")
 local api = require("textcase").api
 
 local M = {}
+
+-- Access the state from repeat methods to store visual region
+local repeat_methods = require("strings.repeat.methods")
 
 ---@class textcase.snacks.Item
 ---@field text string
@@ -154,6 +158,13 @@ function M.visual_mode(opts)
         vim.notify("snacks.nvim is required for this feature", vim.log.levels.ERROR)
         return
     end
+
+    -- Save the visual region before opening the picker (same as telescope does)
+    local mode = vim.api.nvim_get_mode().mode
+    repeat_methods.state.telescope_previous_mode = mode
+    repeat_methods.state.telescope_previous_buffer = vim.api.nvim_get_current_buf()
+    repeat_methods.state.telescope_previous_visual_region =
+        utils.get_visual_region(0, true, nil, utils.get_mode_at_operator(mode))
 
     local items = create_resulting_cases("Convert to ", constants.change_type.VISUAL)
 
